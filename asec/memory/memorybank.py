@@ -49,7 +49,7 @@ class MemoryBank:
         @param address int
         @param value int
         """
-        if address < 0 or address >= self.size:
+        if (address < 0) or (address >= self.size):
             raise OutOfRangeException('Out of range %x, (size %x)' % (address, self.size))
 
         self._buffer[address] = value
@@ -60,7 +60,7 @@ class MemoryBank:
         @param address int
         @return int
         """
-        if address < 0 or address >= self.size:
+        if (address < 0) or (address >= self.size):
             raise OutOfRangeException('Out of range %x, (size - %x)' % (address, self.size))
 
         return self._buffer[address]
@@ -70,3 +70,6 @@ class MemoryBank:
 
     def __getattr__(self, item):
         return self.readByte(item)
+
+    def __setitem__(self, key, value):
+        self.writeByte(key, value)

@@ -30,14 +30,14 @@ class Screen:
         img = Image.new('RGB', (self.width, self.height))
         for x in range(self.width):
             for y in range(self.height):
-                img.putpixel((x, y), self._pixels[x+(x*y)].hex)
+                img.putpixel((x, y), self._pixels[x+(self.width*y)].hex)
         return img
 
     def toDataArray(self):
         data = []
         for x in range(self.width):
             for y in range(self.height):
-                data.append(self._pixels[x+(x*y)].red)
-                data.append(self._pixels[x+(x*y)].green)
-                data.append(self._pixels[x+(x*y)].blue)
+                data.append(self._pixels[x+(self.width*y)].red)
+                data.append(self._pixels[x+(self.width*y)].green)
+                data.append(self._pixels[x+(self.width*y)].blue)
         return data

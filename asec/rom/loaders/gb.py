@@ -41,6 +41,7 @@ class InfoLoader(DefaultLoader):
         # 0147 - Cartridge Type
         cartridge_type = self.ROM[0x147]
         self._cartridge_type = cartridge_type
+        # print(CARTRIDGE_TYPES_REPR[cartridge_type])
 
         # 0148 - ROM Size
         # Specifies the ROM Size of the cartridge. Typically calculated as "32KB shl N".

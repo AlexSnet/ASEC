@@ -84,7 +84,7 @@ class Screen(QWidget):
 
         if self._image:
             painter.drawImage(0, 0, self._image)
-            painter.drawText(5, 15, "FPS: %03i" % self._fps)
+            painter.drawText(5, 15, "FPS: %-05i" % self._fps)
 
         if self.paused:
             painter.setPen(Qt.NoPen)

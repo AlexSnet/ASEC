@@ -3,7 +3,7 @@ import logging
 from collections import defaultdict
 
 from asec.memory.ram import RAM
-from asec.memory.mmu.gb import MMU
+
 from asec.graphics.gb.palette import Palette
 from asec.graphics.gb.pixelrgbmapper import PixelRGBMapper
 from asec.graphics.gb.screen import Screen
@@ -96,6 +96,7 @@ class GPU:
                 for x in range(8):
                     self.tilemap[i][y][x] = 0
 
+        #self.renderScreen(self.screen)
         self.log.debug('reset')
 
     def checkline(self):
@@ -238,7 +239,7 @@ class GPU:
         tile = (address >> 4) & 511
         y = (address >> 1) & 7
 
-        print(address, value, tile, y, saddr)
+        self.log.debug('updateTile', address, value, tile, y, saddr)
 
         for x in range(8):
             sx = 1 << (7 - x)
@@ -289,6 +290,7 @@ class GPU:
             return self._reg[gaddr]
 
     def writeByte(self, address, value):
+        self.log.debug('writeByte', address, value)
         gaddr = address - 0xFF40
         self._reg[gaddr] = value
 
@@ -313,6 +315,7 @@ class GPU:
         elif gaddr == 6:
             for i in range(160):
                 v = self.readByte((value << 8) + i)
+                self.log.debug('WriteByte ORAM DMA', i, v)
                 self.ORAM.writeByte(i, v)
                 self.updateORAM(0xFE00 + i, v)
 
