@@ -104,15 +104,15 @@ class GPU:
 
         # @TODO: Remove this!
         # For debug only
-        self.renderScreen(self.screen)
+        # self.renderScreen(self.screen)
 
         if self._linemode == 0:  # In hblank
             if self._modeclocks >= 51:
                 # End of hblank for last scanline; render screen
                 if self._curline == 143:
                     self._linemode = 1
-                    self.renderScreen(self.screen)
                     self.log.debug('Render screen')
+                    self.renderScreen(self.screen)
                     self.mainboard.MMU.IF |= 1
                 else:
                     self._linemode = 2

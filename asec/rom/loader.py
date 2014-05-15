@@ -44,3 +44,7 @@ class Loader:
     def name(self):
         return self.loader.name
 
+if __name__ == '__main__':
+    import sys
+    ldr = Loader(sys.argv[1])
+    ldr.read()

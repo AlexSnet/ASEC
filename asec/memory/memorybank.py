@@ -1,3 +1,7 @@
+import os
+import array
+
+
 class OutOfRangeException(Exception):
     pass
 
@@ -5,14 +9,37 @@ class OutOfRangeException(Exception):
 class MemoryBank:
     def __init__(self, size=0):
         self._size = int(size)
-        self._buffer = {}
+        self._buffer = None
         self.reset()
 
-    def reset(self):
+    def reset(self, fill=True):
         """
         reset memory
         """
-        self._buffer = dict(((i, 0) for i in range(self.size)))
+        del self._buffer
+        self._buffer = array.array('B')
+
+        if fill:
+            for i in range(self.size):
+                self._buffer.append(0x00)
+
+        # self._buffer = dict(((i, 0) for i in range(self.size)))
+
+    def load(self, f):
+        f.seek(0, os.SEEK_END)
+        size = f.tell()
+
+        f.seek(0)
+        self.reset(fill=False)
+        self._buffer.fromfile(f, size)
+        while self._buffer.buffer_info()[1] < self.size:
+            self._buffer.append(0x00)
+
+    def dump(self, fp):
+        return fp.write(self.dumps())
+
+    def dumps(self):
+        return self._buffer.tostring()
 
     def __len__(self):
         return self._size
@@ -51,8 +78,13 @@ class MemoryBank:
         """
         if (address < 0) or (address >= self.size):
             raise OutOfRangeException('Out of range %x, (size %x)' % (address, self.size))
-
-        self._buffer[address] = value
+        #print('writeByte', address, value)
+        try:
+            self._buffer.insert(address, value & 0xFF)
+        except Exception as e:
+            print(e)
+            print(address, value)
+        # self._buffer[address] = value
 
     def readByte(self, address):
         """

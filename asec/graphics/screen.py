@@ -41,3 +41,4 @@ class Screen:
                 data.append(self._pixels[x+(self.width*y)].green)
                 data.append(self._pixels[x+(self.width*y)].blue)
         return data
+

@@ -66,7 +66,7 @@ class Processor:
 
         self.reset()
         
-        self._map = [ #dict(( (i,x) for i,x in enumerate([
+        self._map = dict(enumerate([
             # 00
             self.NOP, self.LDBCnn, self.LDBCmA, self.INCBC,
             self.INCr_b, self.DECr_b, self.LDrn_b, self.RLCA,
@@ -146,7 +146,7 @@ class Processor:
             self.LDAIOn, self.POPAF, self.LDAIOC, self.DI,
             self.XXX(0xf4), self.PUSHAF, self.ORn, self.RST30,
             self.LDHLSPn, self.XXX(0xf9), self.LDAmm, self.EI,
-            self.XXX(0xfc), self.XXX(0xfd), self.CPn, self.RST38]  #)))
+            self.XXX(0xfc), self.XXX(0xfd), self.CPn, self.RST38]))
         self._cbmap = [
             # CB00
             self.RLCr_b, self.RLCr_c, self.RLCr_d, self.RLCr_e,
@@ -242,10 +242,14 @@ class Processor:
 
     def exec(self):
         self.R.r = (self.R.r + 1) & 127
-        self._map[self.mainboard.MMU.readByte(self.R.pc)]()
+        self.call(self.mainboard.MMU.readByte(self.R.pc))
         self.R.pc += 1
         self.R.pc &= 65535
         self.CLOCK.m += self.R.m
+
+    def call(self, instruction):
+        self.log.debug('CALL 0x%04X (%s)' % (instruction, self._map[instruction].__name__))
+        self._map[instruction]()
 
     ###
     # Processor instructions
@@ -3547,7 +3551,7 @@ class Processor:
         if self._cbmap[i]:
             self._cbmap[i]()
         else:
-            print(i)
+            self.log.error("MAPcb unknown call 0x%06X", i)
 
     def XX(self):
         """

@@ -137,7 +137,7 @@ class MMU:
         self.ramOffs = 0x00
 
         self.BIOS.reset()
-        self.ROM.reset()
+        self.ROM.reset(fill=False)
         self.ERAM.reset()
         self.WRAM.reset()
         self.ZRAM.reset()
@@ -149,58 +149,60 @@ class MMU:
         @param address int
         @return int
         """
+        ret = -1
+
         adr = address & 0xF000
 
         # ROM Bank 0
         if adr == 0x0000:
             if self.inBios:
                 if address < 0x0100:
-                    return self.BIOS.readByte(address)
+                    ret = self.BIOS.readByte(address)
                 elif self._mainboard.CPU.R.pc == 0x0100:
                     # Leaving BIOS
                     self.inBios = 0
                     self.log.debug('Leaving BIOS')
             else:
-                return self.ROM.readByte(address)
+                ret = self.ROM.readByte(address)
 
         elif 0x1000 <= adr <= 0x3000:
-            return self.ROM.readByte(address)
+            ret = self.ROM.readByte(address)
 
         # ROM Bank 1
         elif 0x4000 <= adr <= 0x7000:
-            return self.ROM.readByte(self.romOffs + (address & 0x3FFF))
+            ret = self.ROM.readByte(self.romOffs + (address & 0x3FFF))
 
         # VRAM
         elif 0x8000 <= adr <= 0x9000:
-            return self._mainboard.GPU.VRAM.readByte(address & 0x1FFF)
+            ret = self._mainboard.GPU.VRAM.readByte(address & 0x1FFF)
 
         # External RAM
         elif 0xA000 <= adr <= 0xB000:
             # @TODO: Why ramOffs ????
             # @NOTE: Remove ramOffs from function
-            return self.ERAM.readByte(self.ramOffs + (address & 0x1FFF))
+            ret = self.ERAM.readByte(self.ramOffs + (address & 0x1FFF))
 
         # Work RAM and echo
         elif 0xC000 <= adr <= 0xE000:
-            return self.WRAM.readByte(address & 0x1FFF)
+            ret = self.WRAM.readByte(address & 0x1FFF)
 
         else:
             adr = address & 0x0F00
             # Echo RAM
             if 0x000 <= adr <= 0xD00:
-                return self.WRAM.readByte(address & 0x1FFF)
+                ret = self.WRAM.readByte(address & 0x1FFF)
 
             # OAM
             elif adr == 0xE00:
-                return self._mainboard.GPU.ORAM.readByte(address & 0xFF) if (address & 0xFF) < 0xA0 else 0
+                ret = self._mainboard.GPU.ORAM.readByte(address & 0xFF) if (address & 0xFF) < 0xA0 else 0
 
             # Zeropage RAM, I/O, interrupts
             else:
                 if address == 0xFFFF:
-                    return self.IE
+                    ret = self.IE
 
                 elif address > 0xFF7F:
-                    return self.ZRAM.readByte(address & 0x7F)
+                    ret = self.ZRAM.readByte(address & 0x7F)
 
                 else:
                     adr = address & 0xF0
@@ -208,23 +210,24 @@ class MMU:
                         adr = address & 0xF
 
                         if adr == 0:
-                            return self._mainboard.KEY.readByte()
+                            ret = self._mainboard.KEY.readByte()
 
                         elif 4 <= adr <= 7:
                             self._mainboard.TIMER.readByte(address)
 
                         elif adr == 15:
-                            return self.IF  # interrupt flags
+                            ret = self.IF  # interrupt flags
 
                         else:
-                            return 0
+                            ret = 0
 
                     elif 0x10 <= adr <= 0x30:
-                        return 0
+                        ret = 0
 
                     elif 0x40 <= adr <= 0x70:
-                        return self._mainboard.GPU.readByte(address)
-        return -1
+                        ret = self._mainboard.GPU.readByte(address)
+        self.log.debug("[0x%06X] >> 0x%06X", address, ret)
+        return ret
 
     def readWord(self, address):
         """
@@ -239,6 +242,7 @@ class MMU:
         @param address int
         @param value int
         """
+        self.log.debug("[0x%06X] << 0x%06X", address, value)
         adr = address & 0xF000
 
         # ROM bank 0
@@ -346,7 +350,7 @@ class MMU:
                     self.ROM.writeByte(i, d)
                     i += 1
 
-                if len(buffer) < 4096:
+                if len(buffer) == 0:
                     self.cartType = self.ROM.readByte(0x147)
                     self.log.debug('ROM loaded, bytes %i, cartridge type %X' % (i, self.cartType))
                     break

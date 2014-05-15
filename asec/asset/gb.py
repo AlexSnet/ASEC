@@ -21,7 +21,6 @@ class Device(Mainboard):
         self.KEY = Keyboard(self)
         self.TIMER = Timer(self)
 
-
     def reset(self):
         self.MMU.reset()
         self.GPU.reset()
@@ -29,8 +28,6 @@ class Device(Mainboard):
         self.KEY.reset()
         self.TIMER.reset()
         self.log.debug('reset')
-
-
 
     def insertCartridge(self, filePath):
         self.log.debug('Cartridge inserted "%s".' % filePath)
@@ -47,8 +44,7 @@ class Device(Mainboard):
             self.CPU.R.m = 1
         else:
             instruction = self.MMU.readByte(self.CPU.R.pc)
-            # self.log.debug('Calling processor instruction %-02i (%s)' % (instruction, self.CPU._map[instruction].__name__))
-            self.CPU._map[instruction]()
+            self.CPU.call(instruction)
             self.CPU.R.pc += 1
             self.CPU.R.pc &= 65535
 
@@ -86,8 +82,9 @@ class Device(Mainboard):
         self.CPU._STOP = 0
         while self._loop:
             if self.CPU._STOP == 0:
-                self.frame()
-                time.sleep(.016)
+                #self.frame()
+                self.CPU.exec()
+                # time.sleep(.016)
         self.log.debug('Execution loop ended')
 
     def play(self):
@@ -99,7 +96,7 @@ class Device(Mainboard):
 if __name__ == '__main__':
     import sys
     import logging
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s\t%(levelname)-10s\t%(name)-20s\t%(process)-5d\t%(message)s")
 
     cartridge = ''
     if len(sys.argv) == 2:
