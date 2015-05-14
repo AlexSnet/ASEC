@@ -5,6 +5,7 @@ from asec.memory.ram import RAM
 from asec.memory.rom import ROM
 from asec.bios.gb import BIOS
 
+
 class MMU:
     """
     Memory Management Unit for GB
@@ -28,7 +29,6 @@ class MMU:
     CARTRIDGE_HEADER_OFFSET = 0x0100
     CARTRIDGE_HEADER_END = 0x014F
 
-
     # [4000-7FFF] Cartridge ROM, other banks: Any subsequent 16k "banks" of the
     # cartridge program can be made available to the CPU here, one by one a
     # chip on the cartridge is generally used to switch between banks, and make
@@ -36,7 +36,6 @@ class MMU:
     # that no bank-selection chip is required.
     ROM_BANK_1_OFFSET = 0x4000
     ROM_BANK_1_END = 0x7FFF
-
 
     # [8000-9FFF] Graphics RAM: Data required for the backgrounds and sprites
     # used by the graphics subsystem is held here, and can be changed by the
@@ -49,7 +48,6 @@ class MMU:
     GPU_VRAM_OFFSET = 0x8000
     GPU_VRAM_END = 0x9FFF
 
-
     # [A000-BFFF] Cartridge (External) RAM: There is a small amount of
     # writeable memory available in the GameBoy if a game is produced that
     # requires more RAM than is available in the hardware, additional 8k chunks
@@ -57,12 +55,10 @@ class MMU:
     EXT_RAM_OFFSET = 0xA000
     EXT_RAM_END = 0xBFFF
 
-
     # [C000-DFFF] Working RAM: The GameBoy's internal 8k of RAM, which can be
     # read from or written to by the CPU.
     WORKING_RAM_OFFSET = 0xC000
     WORKING_RAM_END = 0xDFFF
-
 
     # [E000-FDFF] Working RAM (shadow): Due to the wiring of the GameBoy
     # hardware, an exact copy of the working RAM is available 8k higher in the
@@ -71,13 +67,11 @@ class MMU:
     WORKING_RAM_SHADOW_OFFSET = 0xE000
     WORKING_RAM_SHADOW_END = 0xFDFF
 
-
     # [FE00-FE9F] Graphics: sprite information: Data about the sprites rendered
     # by the graphics chip are held here, including the sprites' positions and
     # attributes.
     GRAPHICS_SPRITE_OFFSET = 0xFE00
     GRAPHICS_SPRITE_END = 0xFE9F
-
 
     # [FF00-FF7F] Memory-mapped I/O: Each of the GameBoy's subsystems
     # (graphics, sound, etc.) has control values, to allow programs to create
@@ -85,7 +79,6 @@ class MMU:
     # directly on the address bus, in this area.
     MEM_MAPPED_IO_OFFSET = 0xFF00
     MEM_MAPPED_IO_END = 0xFF7F
-
 
     # [FF80-FFFF] Zero-page RAM: A high-speed area of 128 bytes of RAM is
     # available at the top of memory. Oddly, though this is "page" 255 of the
@@ -95,7 +88,6 @@ class MMU:
     ZERO_PAGE_RAM_OFFSET = 0xFF80
     ZERO_PAGE_RAM_END = 0xFFFF
 
-    
     def __init__(self, mainboard):
         self._mainboard = mainboard
 
@@ -120,7 +112,7 @@ class MMU:
 
         self.inBios = 1
         self.IE = 0
-        self.IF = 0 # Interrupt flags
+        self.IF = 0  # Interrupt flags
 
         self.reset()
 
@@ -194,7 +186,8 @@ class MMU:
 
             # OAM
             elif adr == 0xE00:
-                ret = self._mainboard.GPU.ORAM.readByte(address & 0xFF) if (address & 0xFF) < 0xA0 else 0
+                ret = self._mainboard.GPU.ORAM.readByte(address & 0xFF) \
+                    if (address & 0xFF) < 0xA0 else 0
 
             # Zeropage RAM, I/O, interrupts
             else:
@@ -277,7 +270,10 @@ class MMU:
 
         # VRAM
         elif 0x8000 <= adr <= 0x9000:
-            self._mainboard.GPU.VRAM.writeByte(self.ramOffs + (address & 0x1FFF), value)
+            self._mainboard.GPU.VRAM.writeByte(
+                self.ramOffs + (address & 0x1FFF),
+                value
+            )
 
         # Extrnal RAM
         elif 0xA000 <= adr <= 0xB000:
@@ -352,5 +348,8 @@ class MMU:
 
                 if len(buffer) == 0:
                     self.cartType = self.ROM.readByte(0x147)
-                    self.log.debug('ROM loaded, bytes %i, cartridge type %X' % (i, self.cartType))
+                    self.log.debug(
+                        'ROM loaded, bytes %i, cartridge type %X' %
+                        (i, self.cartType)
+                    )
                     break

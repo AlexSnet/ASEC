@@ -34,8 +34,6 @@ class Timer:
         self.log.debug('reset')
 
     def inc(self):
-        oldclock = self.clock.main
-
         self.clock.sub += self.mainboard.CPU.R.m
         if self.clock.sub > 3:
             self.clock.main += 1

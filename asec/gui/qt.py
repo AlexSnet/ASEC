@@ -4,9 +4,21 @@ import time
 import threading
 
 try:
-    from PyQt5.QtCore import QFile, QFileInfo, QPoint, QRect, QRectF, QSettings, QSize, Qt, QTextStream
-    from PyQt5.QtGui import QIcon, QKeySequence, QPainterPath, QPainter, QLinearGradient, QPen, QColor, QImage
-    from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QMainWindow, QMessageBox, QTextEdit, QWidget, QPushButton
+    from PyQt5.QtCore import (
+        QFile, QFileInfo,
+        QPoint, QRect, QRectF,
+        QSettings, QSize, Qt, QTextStream
+    )
+    from PyQt5.QtGui import (
+        QIcon, QKeySequence, QPainterPath,
+        QPainter, QLinearGradient,
+        QPen, QColor, QImage
+    )
+    from PyQt5.QtWidgets import (
+        QAction, QApplication, QFileDialog,
+        QMainWindow, QMessageBox, QTextEdit,
+        QWidget, QPushButton
+    )
     # from PyQt5 import Qt
 except ImportError:
     print('PyQt5 is needed')
@@ -36,7 +48,11 @@ class Timer(threading.Thread):
 
 class ViewQImage(QImage):
     def __init__(self, screen):
-        super(ViewQImage,self).__init__(screen.toImage().tostring(), screen.width, screen.height, QImage.Format_RGB32)
+        super(ViewQImage, self).__init__(
+            screen.toImage().tostring(),
+            screen.width, screen.height,
+            QImage.Format_RGB32
+        )
 
 
 class Screen(QWidget):
@@ -50,7 +66,7 @@ class Screen(QWidget):
         self._fps = 0
         self._image = None
         self._last_redraw = time.time()
-        self._redraw_timer = Timer(.03, lambda:self.repaint())
+        self._redraw_timer = Timer(.03, lambda: self.repaint())
         self._redraw_timer.start()
 
         self._repainting = False
@@ -125,13 +141,12 @@ class Screen(QWidget):
 
     def closeEvent(self, event):
         self.pause()
-        self.emulator._loop = False
-        self.emulator._stop()
+        # self.emulator._loop = False
+        # self.emulator._stop()
         self._redraw_timer.stop()
         self._redraw_timer.join()
         del self._redraw_timer
         del self.emulator
-
 
 
 class ROMChooser(QWidget):
@@ -252,16 +267,23 @@ class MainWindow(QMainWindow):
         else:
             self.setWindowTitle("Choose game ROM - ASEC")
 
+
 def main():
     import logging
-    logging.basicConfig(level=logging.DEBUG)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)-15s\t%(levelname)-10s\t"
+               "%(name)-20s\t%(process)-5d\t%(message)s"
+    )
 
     application = QApplication(sys.argv)
     mw = MainWindow()
-    mw.show()
 
     if len(sys.argv) == 2:
         mw.setCurrentFile(sys.argv[1])
+    else:
+        mw.show()
 
     sys.exit(application.exec_())
 

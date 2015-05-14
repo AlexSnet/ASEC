@@ -1,5 +1,6 @@
 from asec.graphics.pixel import Pixel
 
+
 class PixelRGBMapper:
     def __init__(self):
         self.OFF = Pixel(255, 255, 255)

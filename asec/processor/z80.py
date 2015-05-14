@@ -51,6 +51,10 @@ class Clock:
 
 
 class Processor:
+    """
+    Z80 Processor emulator
+    Speed: 4.19 MHz
+    """
     def __init__(self, mainboard):
         self.mainboard = mainboard
 
@@ -65,7 +69,7 @@ class Processor:
         self.CLOCK = Clock()
 
         self.reset()
-        
+
         self._map = dict(enumerate([
             # 00
             self.NOP, self.LDBCnn, self.LDBCmA, self.INCBC,
@@ -147,7 +151,7 @@ class Processor:
             self.XXX(0xf4), self.PUSHAF, self.ORn, self.RST30,
             self.LDHLSPn, self.XXX(0xf9), self.LDAmm, self.EI,
             self.XXX(0xfc), self.XXX(0xfd), self.CPn, self.RST38]))
-        self._cbmap = [
+        self._cbmap = dict(enumerate([
             # CB00
             self.RLCr_b, self.RLCr_c, self.RLCr_d, self.RLCr_e,
             self.RLCr_h, self.RLCr_l, self.RLCHL, self.RLCr_a,
@@ -227,7 +231,7 @@ class Processor:
             self.SET6b, self.SET6c, self.SET6d, self.SET6e,
             self.SET6h, self.SET6l, self.SET6m, self.SET6a,
             self.SET7b, self.SET7c, self.SET7d, self.SET7e,
-            self.SET7h, self.SET7l, self.SET7m, self.SET7a]
+            self.SET7h, self.SET7l, self.SET7m, self.SET7a]))
 
     def reset(self):
         self._HALT = 0
@@ -239,8 +243,7 @@ class Processor:
 
         self.log.debug('reset')
 
-
-    def exec(self):
+    def execute(self):
         self.R.r = (self.R.r + 1) & 127
         self.call(self.mainboard.MMU.readByte(self.R.pc))
         self.R.pc += 1
@@ -248,7 +251,12 @@ class Processor:
         self.CLOCK.m += self.R.m
 
     def call(self, instruction):
-        self.log.debug('CALL 0x%04X (%s)' % (instruction, self._map[instruction].__name__))
+        self.log.debug(
+            'CALL 0x%04X (%s)' % (
+                instruction,
+                self._map[instruction].__name__
+            )
+        )
         self._map[instruction]()
 
     ###

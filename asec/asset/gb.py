@@ -7,6 +7,7 @@ from asec.graphics.gb.gpu import GPU
 from asec.input.gb.keyboard import Keyboard
 from asec.timer.gb import Timer
 
+
 class Device(Mainboard):
     def __init__(self):
         super(Device, self).__init__()
@@ -31,8 +32,8 @@ class Device(Mainboard):
 
     def insertCartridge(self, filePath):
         self.log.debug('Cartridge inserted "%s".' % filePath)
-        if self._started.is_set():
-            self._stop()
+        # if self._started.is_set():
+        #     self._stop()
         self.reset()
         self.MMU.loadROM(filePath)
         # self.start()
@@ -44,7 +45,9 @@ class Device(Mainboard):
             self.CPU.R.m = 1
         else:
             instruction = self.MMU.readByte(self.CPU.R.pc)
+
             self.CPU.call(instruction)
+
             self.CPU.R.pc += 1
             self.CPU.R.pc &= 65535
 
@@ -80,11 +83,10 @@ class Device(Mainboard):
     def run(self):
         self.log.debug('Execution loop started')
         self.CPU._STOP = 0
-        while self._loop:
-            if self.CPU._STOP == 0:
-                #self.frame()
-                self.CPU.exec()
-                # time.sleep(.016)
+        while self.CPU._STOP == 0:
+            self.frame()
+            # self.CPU.execute()
+            # time.sleep(.0016)
         self.log.debug('Execution loop ended')
 
     def play(self):
@@ -96,13 +98,18 @@ class Device(Mainboard):
 if __name__ == '__main__':
     import sys
     import logging
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)-15s\t%(levelname)-10s\t%(name)-20s\t%(process)-5d\t%(message)s")
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)-15s\t%(levelname)-10s\t"
+               "%(name)-20s\t%(process)-5d\t%(message)s"
+    )
 
     cartridge = ''
     if len(sys.argv) == 2:
         cartridge = sys.argv[1]
     else:
-        cartridge = '../../roms/ttt.gb'
+        cartridge = 'roms/ttt.gb'
 
     gb = Device()
     gb.insertCartridge(cartridge)

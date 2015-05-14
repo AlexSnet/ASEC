@@ -4,7 +4,8 @@ def clamp(x):
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
 
-class Pixel:
+
+class Pixel(object):
     def __init__(self, red=0, green=0, blue=0):
         self._r = self._g = self._b = 0
 

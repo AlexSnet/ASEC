@@ -10,7 +10,7 @@ from asec.graphics.gb.screen import Screen
 from asec.utils.signal import Signal
 
 
-class GPU:
+class GPU(object):
     """
     GameBoy graphics processor unit
     """
@@ -29,7 +29,7 @@ class GPU:
         self.rgbMapper = PixelRGBMapper()
         self.palette = Palette()
 
-        self.tilemap = {}  #[512][8][8]
+        self.tilemap = {}  # [512][8][8]
 
         self._curline = 0
         self._curscan = 0

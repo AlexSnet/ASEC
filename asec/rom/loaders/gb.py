@@ -1,5 +1,5 @@
 from asec.rom.loaders import DefaultLoader
-from asec.memory.rom import ROM
+
 
 CARTRIDGE_TYPES_REPR = {
     0x00: "ROM ONLY",		        0x13: "MBC3+RAM+BATTERY",
@@ -46,7 +46,8 @@ class InfoLoader(DefaultLoader):
         print('Cartridge type:', CARTRIDGE_TYPES_REPR[cartridge_type])
 
         # 0148 - ROM Size
-        # Specifies the ROM Size of the cartridge. Typically calculated as "32KB shl N".
+        # Specifies the ROM Size of the cartridge.
+        # Typically calculated as "32KB shl N".
         rom_size = self.ROM[0x148]
         self._rom_size = rom_size
         print('ROM size:', rom_size)
@@ -57,14 +58,16 @@ class InfoLoader(DefaultLoader):
         print('RAM Size:', ram_size)
 
         # 014A - Destination Code
-        # Specifies if this version of the game is supposed to be sold in japan, or anywhere else.
+        # Specifies if this version of the game is supposed
+        #  to be sold in japan, or anywhere else.
         # Only two values are defined.
         destination_code = self.ROM[0x14A]  # 0x00 - Japan, 0x01 - Non-Japan
         print('Destination:', 'Japan' if destination_code == 0x00 else 'Non Japan')
 
         # 014B - Old Licensee Code
-        #  Specifies the games company/publisher code in range 00-FFh.
-        #  A value of 33h signalizes that the New License Code in header bytes 0144-0145 is used instead.
+        # Specifies the games company/publisher code in range 00-FFh.
+        # A value of 33h signalizes that the New License Code in
+        #   header bytes 0144-0145 is used instead.
         # (Super GameBoy functions won't work if <> $33.)
         old_licensee_code = self.ROM[0x14B]
         print('License code:', old_licensee_code)
@@ -75,7 +78,8 @@ class InfoLoader(DefaultLoader):
         print('Mask ROM Version:', mask_rom_version)
 
         # 014D - Header Checksum
-        # Contains an 8 bit checksum across the cartridge header bytes 0134-014C.
+        # Contains an 8 bit checksum across the
+        #  cartridge header bytes 0134-014C.
         # The checksum is calculated as follows:
         header_checksum = self.ROM[0x14D]
         print('Header checksum:', header_checksum)
@@ -107,4 +111,5 @@ class InfoLoader(DefaultLoader):
         from asec.asset.gb import Device
         emu = Device()
         emu.MMU.ROM = self.ROM
+        emu.MMU.cartType = self.ROM.readByte(0x147)
         return emu

@@ -1,7 +1,7 @@
 from asec.graphics.pixel import Pixel
 
 
-class Screen:
+class Screen(object):
     def __init__(self, pixel_w, pixel_h):
         self._width = pixel_w
         self._height = pixel_h
