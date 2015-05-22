@@ -39,7 +39,7 @@ class Device(Mainboard):
         # self.start()
 
     def frame(self):
-        fclock = self.CPU.CLOCK.m+17556
+        # fclock = self.CPU.CLOCK.m+17556
         # self.log.debug("Frame")
         if self.CPU._HALT:
             self.CPU.R.m = 1
@@ -51,34 +51,36 @@ class Device(Mainboard):
             self.CPU.R.pc += 1
             self.CPU.R.pc &= 65535
 
-        if self.CPU.R.ime and self.MMU.IE and self.MMU.IF:
-            self.CPU._HALT = 0
-            self.CPU.R.ime = 0
-            ifired = self.MMU.IE & self.MMU.IF
-            if ifired & 1:
-                self.MMU.IF &= 0xFE
-                self.CPU.RST40()
-            elif ifired & 2:
-                self.MMU.IF &= 0xFD
-                self.CPU.RST48()
-            elif ifired & 4:
-                self.MMU.IF &= 0xFB
-                self.CPU.RST50()
-            elif ifired & 8:
-                self.MMU.IF &= 0xF7
-                self.CPU.RST58()
-            elif ifired & 16:
-                self.MMU.IF &= 0xEF
-                self.CPU.RST60()
-            else:
-                self.CPU.R.ime = 1
+        # if self.CPU.R.ime and self.MMU.IE and self.MMU.IF:
+        #     self.CPU._HALT = 0
+        #     self.CPU.R.ime = 0
+        #     ifired = self.MMU.IE & self.MMU.IF
+        #     if ifired & 1:
+        #         self.MMU.IF &= 0xFE
+        #         self.CPU.RST40()
+        #     elif ifired & 2:
+        #         self.MMU.IF &= 0xFD
+        #         self.CPU.RST48()
+        #     elif ifired & 4:
+        #         self.MMU.IF &= 0xFB
+        #         self.CPU.RST50()
+        #     elif ifired & 8:
+        #         self.MMU.IF &= 0xF7
+        #         self.CPU.RST58()
+        #     elif ifired & 16:
+        #         self.MMU.IF &= 0xEF
+        #         self.CPU.RST60()
+        #     else:
+        #         self.CPU.R.ime = 1
 
         self.CPU.CLOCK.m += self.CPU.R.m
-        self.GPU.checkline()
+        # self.CPU.CLOCK.t += self.CPU.R.t
         self.TIMER.inc()
 
-        if self.CPU.CLOCK.m >= fclock:
-            self.CPU._STOP = 1
+        self.GPU.checkline()
+
+        # if self.CPU.CLOCK.m >= fclock:
+        #     self.CPU._STOP = 1
 
     def run(self):
         self.log.debug('Execution loop started')
@@ -100,7 +102,7 @@ if __name__ == '__main__':
     import logging
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)-15s\t%(levelname)-10s\t"
                "%(name)-20s\t%(process)-5d\t%(message)s"
     )

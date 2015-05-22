@@ -141,61 +141,81 @@ class MMU:
         @param address int
         @return int
         """
-        ret = -1
+        value = self._readByte(address)
+        self.log.debug("[0x%06X] >> 0x%06X", address, value)
+        return value
 
+    def _readByte(self, address):
         adr = address & 0xF000
+
+        self.log.debug(
+            'Reading byte from 0x%04X & 0xF000 = 0x%04X',
+            address,
+            adr
+        )
 
         # ROM Bank 0
         if adr == 0x0000:
             if self.inBios:
+                self.log.debug('In section: BIOS')
                 if address < 0x0100:
-                    ret = self.BIOS.readByte(address)
+                    return self.BIOS.readByte(address)
                 elif self._mainboard.CPU.R.pc == 0x0100:
-                    # Leaving BIOS
-                    self.inBios = 0
-                    self.log.debug('Leaving BIOS')
+                    self.log.debug('In section: BIOS (leaving)')
+                    self.inBios = False
+                    return 0x0
             else:
-                ret = self.ROM.readByte(address)
+                self.log.debug('In section: ROM')
+                return self.ROM.readByte(address)
 
         elif 0x1000 <= adr <= 0x3000:
-            ret = self.ROM.readByte(address)
+            self.log.debug('In section: ROM')
+            return self.ROM.readByte(address)
 
         # ROM Bank 1
         elif 0x4000 <= adr <= 0x7000:
-            ret = self.ROM.readByte(self.romOffs + (address & 0x3FFF))
+            self.log.debug('In section: ROM Bank 1')
+            return self.ROM.readByte(self.romOffs + (address & 0x3FFF))
 
         # VRAM
         elif 0x8000 <= adr <= 0x9000:
-            ret = self._mainboard.GPU.VRAM.readByte(address & 0x1FFF)
+            self.log.debug('In section: VRAM')
+            return self._mainboard.GPU.VRAM.readByte(address & 0x1FFF)
 
         # External RAM
         elif 0xA000 <= adr <= 0xB000:
-            # @TODO: Why ramOffs ????
-            # @NOTE: Remove ramOffs from function
-            ret = self.ERAM.readByte(self.ramOffs + (address & 0x1FFF))
+            self.log.debug('In section: External RAM')
+            return self.ERAM.readByte(self.ramOffs + (address & 0x1FFF))
 
         # Work RAM and echo
         elif 0xC000 <= adr <= 0xE000:
-            ret = self.WRAM.readByte(address & 0x1FFF)
+            self.log.debug('In section: Work RAM & echo')
+            return self.WRAM.readByte(address & 0x1FFF)
 
         else:
             adr = address & 0x0F00
+            self.log.debug('in section 0xF000 with adr=0x%04X', adr)
             # Echo RAM
             if 0x000 <= adr <= 0xD00:
-                ret = self.WRAM.readByte(address & 0x1FFF)
+                self.log.debug('In section: Echo RAM')
+                return self.WRAM.readByte(address & 0x1FFF)
 
             # OAM
             elif adr == 0xE00:
-                ret = self._mainboard.GPU.ORAM.readByte(address & 0xFF) \
+                self.log.debug('In section: OAM')
+                return self._mainboard.GPU.ORAM.readByte(address & 0xFF) \
                     if (address & 0xFF) < 0xA0 else 0
 
             # Zeropage RAM, I/O, interrupts
             else:
+                self.log.debug('In section: Zeropage RAM, I/O, interrupts')
                 if address == 0xFFFF:
-                    ret = self.IE
+                    self.log.debug('In section: 0xFFFF, IE')
+                    return self.IE
 
                 elif address > 0xFF7F:
-                    ret = self.ZRAM.readByte(address & 0x7F)
+                    self.log.debug('In section: Zeropage RAM')
+                    return self.ZRAM.readByte(address & 0x7F)
 
                 else:
                     adr = address & 0xF0
@@ -203,24 +223,34 @@ class MMU:
                         adr = address & 0xF
 
                         if adr == 0:
-                            ret = self._mainboard.KEY.readByte()
+                            self.log.debug('In section: Keyboard')
+                            return self._mainboard.KEY.readByte()
 
                         elif 4 <= adr <= 7:
-                            self._mainboard.TIMER.readByte(address)
+                            self.log.debug('In section: Timer')
+                            return self._mainboard.TIMER.readByte(address)
 
                         elif adr == 15:
-                            ret = self.IF  # interrupt flags
+                            self.log.debug('In section: Interrupt')
+                            return self.IF  # interrupt flags
 
                         else:
-                            ret = 0
+                            self.log.debug('In section: 0')
+                            return 0
 
                     elif 0x10 <= adr <= 0x30:
-                        ret = 0
+                        self.log.debug('In section: 0')
+                        return 0
 
                     elif 0x40 <= adr <= 0x70:
-                        ret = self._mainboard.GPU.readByte(address)
-        self.log.debug("[0x%06X] >> 0x%06X", address, ret)
-        return ret
+                        self.log.debug('In section: GPU')
+                        return self._mainboard.GPU.readByte(address)
+
+                    else:
+                        self.log.error(
+                            'Unknown section, address = 0x%04X',
+                            address
+                        )
 
     def readWord(self, address):
         """

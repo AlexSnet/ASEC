@@ -88,7 +88,7 @@ class MemoryBank(object):
 
         if (address < 0) or (address >= self.size):
             raise OutOfRangeException(
-                'Out of range %x, (size %x)' %
+                'Out of range 0x%06X, (size 0x%06X)' %
                 (address, self.size)
             )
 
@@ -111,7 +111,7 @@ class MemoryBank(object):
 
         if (address < 0) or (address >= self.size):
             raise OutOfRangeException(
-                'Out of range %x, (size - %x)' %
+                'Out of range 0x%06X, (size 0x%06X)' %
                 (address, self.size)
             )
 

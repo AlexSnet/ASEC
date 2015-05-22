@@ -48,7 +48,7 @@ class GPU(object):
         self._objsize = 0
         self._scanrow = None
         self._objdata = None
-        self._tilemap = None
+        # self.tilemap = None
 
         self._bgtilebase = 0x0000
         self._bgmapbase = 0x1800
@@ -75,9 +75,21 @@ class GPU(object):
 
         self._objsize = 0
         self._scanrow = dict([(i, 0) for i in range(160)])
-        self._objdata = dict([(i, {'y': -16,'x': -8,'tile': 0,'palette': 0,'yflip': 0,'xflip': 0,'prio': 0,'num': i}) for i in range(40)])
-        self._tilemap = defaultdict(lambda:{'x':0, 'y':0})
+        self._objdata = dict([
+            (i, {
+                'y': -16,
+                'x': -8,
+                'tile': 0,
+                'palette': 0,
+                'yflip': 0,
+                'xflip': 0,
+                'prio': 0,
+                'num': i
+            }) for i in range(40)
+        ])
+        # self.tilemap = [[[0]*8]*8]*512
 
+        # Set to values expected by BIOS, to start
         self._bgtilebase = 0x0000
         self._bgmapbase = 0x1800
         self._wintilebase = 0x1800
@@ -96,17 +108,14 @@ class GPU(object):
                 for x in range(8):
                     self.tilemap[i][y][x] = 0
 
-        #self.renderScreen(self.screen)
+        self.renderScreen(self.screen)
         self.log.debug('reset')
 
     def checkline(self):
         self._modeclocks += self.mainboard.CPU.R.m
 
-        # @TODO: Remove this!
-        # For debug only
-        # self.renderScreen(self.screen)
-
         if self._linemode == 0:  # In hblank
+            self.log.debug('checkline: In hblank')
             if self._modeclocks >= 51:
                 # End of hblank for last scanline; render screen
                 if self._curline == 143:
@@ -122,6 +131,7 @@ class GPU(object):
                 self._modeclocks = 0
 
         elif self._linemode == 1:  # In vblank
+            self.log.debug('checkline: In vblank')
             if self._modeclocks >= 114:
                 self._modeclocks = 0
                 self._curline += 1
@@ -132,11 +142,13 @@ class GPU(object):
                     self._linemode = 2
 
         elif self._linemode == 2:  # In OAM-read mode
+            self.log.debug('checkline: In OAM-read mode')
             if self._modeclocks >= 20:
                 self._modeclocks = 0
                 self._linemode = 3
 
         elif self._linemode == 3:  # In VRAM-read mode
+            self.log.debug('checkline: In VRAM-read mode')
             # Render scanline at end of allotted time
             if self._modeclocks >= 43:
                 self._modeclocks = 0
@@ -156,7 +168,7 @@ class GPU(object):
                             if tile < 128:
                                 tile += 256
 
-                            tilerow = self._tilemap[tile][y]
+                            tilerow = self.tilemap[tile][y]
                             while w:
                                 self._scanrow[160 - x] = tilerow[x]
                                 self.screen._pixels[linebase + 3] = self.palette.bg[tilerow[x]]
@@ -169,12 +181,12 @@ class GPU(object):
                                     tile = self.VRAM.readByte(mapbase + t)
                                     if tile < 128:
                                         tile += 256
-                                    tilerow = self._tilemap[tile][y]
+                                    tilerow = self.tilemap[tile][y]
 
                                 linebase += 4
                                 w -= 1
                         else:
-                            tilerow = self._tilemap[self.VRAM.readByte(mapbase + t)][y]
+                            tilerow = self.tilemap[self.VRAM.readByte(mapbase + t)][y]
                             while w:
                                 self._scanrow[160 - x] = tilerow[x]
                                 self.screen._pixels[linebase + 3] = self.palette.bg[tilerow[x]]
@@ -184,7 +196,7 @@ class GPU(object):
                                 if x == 8:
                                     t = (t + 1) & 31
                                     x = 0
-                                    tilerow = self._tilemap[self.VRAM.readByte(mapbase + t)][y]
+                                    tilerow = self.tilemap[self.VRAM.readByte(mapbase + t)][y]
 
                                 linebase += 4
                                 w -= 1
@@ -198,12 +210,13 @@ class GPU(object):
                         else:
                             linebase = self._curscan
                             for i in range(40):
-                                obj = self._objdata[i]
-                                if obj['y'] <= self._curline and (obj['y'] + 8) > self._curline:
+                                obj = self._objdatasorted[i]
+                                if obj['y'] <= self._curline \
+                                   and (obj['y'] + 8) > self._curline:
                                     if obj['yflip']:
-                                        tilerow = self._tilemap[obj['tile']][7 - (self._curline - obj['y'])]
+                                        tilerow = self.tilemap[obj['tile']][7 - (self._curline - obj['y'])]
                                     else:
-                                        tilerow = self._tilemap[obj['tile']][self._curline - obj['y']]
+                                        tilerow = self.tilemap[obj['tile']][self._curline - obj['y']]
 
                                     if obj['palette']:
                                         pal = self.palette.obj1
@@ -243,7 +256,10 @@ class GPU(object):
 
         for x in range(8):
             sx = 1 << (7 - x)
-            self.tilemap[tile][y][x] = 2 if (1 if self.VRAM.readByte(saddr) & sx else 0) | (self.VRAM.readByte(saddr + 1) & sx) else 0
+            self.tilemap[tile][y][x] = 2 \
+                if (
+                    1 if self.VRAM.readByte(saddr) & sx else 0
+                ) | (self.VRAM.readByte(saddr + 1) & sx) else 0
 
     def updateORAM(self, address, value):
         address -= 0xFE00
@@ -264,10 +280,19 @@ class GPU(object):
                 self._objdata[obj]['xflip'] = 1 if value & 0x20 else 0
                 self._objdata[obj]['yflip'] = 1 if value & 0x40 else 0
                 self._objdata[obj]['prio'] = 1 if value & 0x80 else 0
-        print(self._objdata[obj])
-        # self._objdatasorted = sorted(self._objdata, lambda x: x['x'])
+
+        def compare(a, b):
+            return -1 if a['x'] > b['x'] else -1 if a['num'] > b['num'] else 1
+
+        self._objdatasorted = sorted(self._objdata, compare)
 
     def readByte(self, address):
+        value = self._readByte(address)
+        self.log.debug("[0x%06X] >> 0x%06X", address, value)
+        return value
+
+    def _readByte(self, address):
+        self.log.debug('readByte 0x%04X', address)
         gaddr = address - 0xFF40
         if gaddr == 0:
             return (0x80 if self._lcdon else 0) | \
@@ -287,10 +312,10 @@ class GPU(object):
         elif gaddr == 5:
             return self._raster
         else:
-            return self._reg[gaddr]
+            return self._reg.get(gaddr, 0)
 
     def writeByte(self, address, value):
-        self.log.debug('writeByte', address, value)
+        self.log.debug('writeByte 0x%04X on 0x%04X', value, address)
         gaddr = address - 0xFF40
         self._reg[gaddr] = value
 
@@ -313,6 +338,7 @@ class GPU(object):
 
         # OAM DMA
         elif gaddr == 6:
+            self.log.debug('writeByte: OAM DNA')
             for i in range(160):
                 v = self.readByte((value << 8) + i)
                 self.log.debug('WriteByte ORAM DMA', i, v)
@@ -321,6 +347,7 @@ class GPU(object):
 
         # BG palette mapping
         elif gaddr == 7:
+            self.log.debug('writeByte: BG Palette mapping')
             for i in range(4):
                 z = (value >> (i * 2)) & 3
                 if z == 0:
@@ -334,6 +361,7 @@ class GPU(object):
 
         # OBJ0 palette mapping
         elif gaddr == 8:
+            self.log.debug('writeByte: JBJ0 Palette mapping')
             for i in range(4):
                 z = (value >> (i * 2)) & 3
                 if z == 0:
@@ -347,6 +375,7 @@ class GPU(object):
 
         # OBJ1 palette mapping
         elif gaddr == 9:
+            self.log.debug('writeByte: OBJ1 Palette mapping')
             for i in range(4):
                 z = (value >> (i * 2)) & 3
                 if z == 0:

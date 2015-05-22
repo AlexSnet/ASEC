@@ -252,7 +252,7 @@ class Processor:
 
     def call(self, instruction):
         self.log.debug(
-            'CALL 0x%04X (%s)' % (
+            'CALL 0x%06X (%s)' % (
                 instruction,
                 self._map[instruction].__name__
             )
@@ -489,7 +489,6 @@ class Processor:
         self.R.a = self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l)
         self.R.m = 2
 
-
     def LDHLmr_b(self):
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, self.R.b)
         self.R.m = 2
@@ -517,7 +516,6 @@ class Processor:
     def LDHLmr_a(self):
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, self.R.a)
         self.R.m = 2
-
 
     def LDrn_b(self):
         self.R.b = self.mainboard.MMU.readByte(self.R.pc)
@@ -554,12 +552,13 @@ class Processor:
         self.R.pc += 1
         self.R.m = 2
 
-
     def LDHLmn(self):
-        self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, self.mainboard.MMU.readByte(self.R.pc))
+        self.mainboard.MMU.writeByte(
+            (self.R.h << 8) + self.R.l,
+            self.mainboard.MMU.readByte(self.R.pc)
+        )
         self.R.pc += 1
         self.R.m = 3
-
 
     def LDBCmA(self):
         self.mainboard.MMU.writeByte((self.R.b << 8) + self.R.c, self.R.a)
@@ -569,12 +568,13 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.d << 8) + self.R.e, self.R.a)
         self.R.m = 2
 
-
     def LDmmA(self):
-        self.mainboard.MMU.writeByte(self.mainboard.MMU.readWord(self.R.pc), self.R.a)
+        self.mainboard.MMU.writeByte(
+            self.mainboard.MMU.readWord(self.R.pc),
+            self.R.a
+        )
         self.R.pc += 2
         self.R.m = 4
-
 
     def LDABCm(self):
         self.R.a = self.mainboard.MMU.readByte((self.R.b << 8) + self.R.c)
@@ -584,18 +584,18 @@ class Processor:
         self.R.a = self.mainboard.MMU.readByte((self.R.d << 8) + self.R.e)
         self.R.m = 2
 
-
     def LDAmm(self):
-        self.R.a = self.mainboard.MMU.readByte(self.mainboard.MMU.readWord(self.R.pc))
+        self.R.a = self.mainboard.MMU.readByte(
+            self.mainboard.MMU.readWord(self.R.pc)
+        )
         self.R.pc += 2
         self.R.m = 4
 
-
     def LDBCnn(self):
         self.R.c = self.mainboard.MMU.readByte(self.R.pc)
-        self.R.b = self.mainboard.MMU.readByte(self.R.pc + 1)
-        self.R.pc += 2
-        self.R.m = 3
+        self.R.b = self.mainboard.MMU.readByte((self.R.pc + 1) & 0xFFFF)
+        self.R.pc = (self.R.pc + 2) & 0xFFFF
+        # self.R.m = 3
 
     def LDDEnn(self):
         self.R.e = self.mainboard.MMU.readByte(self.R.pc)
@@ -613,7 +613,6 @@ class Processor:
         self.R.sp = self.mainboard.MMU.readWord(self.R.pc)
         self.R.pc += 2
         self.R.m = 3
-
 
     def LDHLmm(self):
         i = self.mainboard.MMU.readWord(self.R.pc)
@@ -648,7 +647,6 @@ class Processor:
             self.R.h = (self.R.h + 1) & 255
         self.R.m = 2
 
-
     def LDHLDA(self):
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, self.R.a)
         self.R.l = (self.R.l - 1) & 255
@@ -663,14 +661,18 @@ class Processor:
             self.R.h = (self.R.h - 1) & 255
         self.R.m = 2
 
-
     def LDAIOn(self):
-        self.R.a = self.mainboard.MMU.readByte(0xFF00 + self.mainboard.MMU.readByte(self.R.pc))
+        self.R.a = self.mainboard.MMU.readByte(
+            0xFF00 + self.mainboard.MMU.readByte(self.R.pc)
+        )
         self.R.pc += 1
         self.R.m = 3
 
     def LDIOnA(self):
-        self.mainboard.MMU.writeByte(0xFF00 + self.mainboard.MMU.readByte(self.R.pc), self.R.a)
+        self.mainboard.MMU.writeByte(
+            0xFF00 + self.mainboard.MMU.readByte(self.R.pc),
+            self.R.a
+        )
         self.R.pc += 1
         self.R.m = 3
 
@@ -682,7 +684,6 @@ class Processor:
         self.mainboard.MMU.writeByte(0xFF00 + self.R.c, self.R.a)
         self.R.m = 2
 
-
     def LDHLSPn(self):
         i = self.mainboard.MMU.readByte(self.R.pc)
         if i > 127:
@@ -692,7 +693,6 @@ class Processor:
         self.R.h = (i >> 8) & 255
         self.R.l = i & 255
         self.R.m = 3
-
 
     def SWAPr_b(self):
         tr = self.R.b
@@ -891,7 +891,6 @@ class Processor:
         self.R.sp += i
         self.R.m = 4
 
-
     def ADCr_b(self):
         a = self.R.a
         self.R.a += self.R.b
@@ -1003,7 +1002,6 @@ class Processor:
             self.R.f |= 0x20
         self.R.m = 2
 
-
     def SUBr_b(self):
         a = self.R.a
         self.R.a -= self.R.b
@@ -1105,7 +1103,6 @@ class Processor:
         if (self.R.a ^ m ^ a) & 0x10:
             self.R.f |= 0x20
         self.R.m = 2
-
 
     def SBCr_b(self):
         a = self.R.a
@@ -1218,7 +1215,6 @@ class Processor:
             self.R.f |= 0x20
         self.R.m = 2
 
-
     def CPr_b(self):
         i = self.R.a
         i -= self.R.b
@@ -1321,7 +1317,6 @@ class Processor:
             self.R.f |= 0x20
         self.R.m = 2
 
-
     def DAA(self):
         a = self.R.a
 
@@ -1335,7 +1330,6 @@ class Processor:
             self.R.f |= 0x10
 
         self.R.m = 1
-
 
     def ANDr_b(self):
         self.R.a &= self.R.b
@@ -1392,7 +1386,6 @@ class Processor:
         self.R.f = 0 if self.R.a else 0x80
         self.R.m = 2
 
-
     def ORr_b(self):
         self.R.a |= self.R.b
         self.R.a &= 255
@@ -1447,7 +1440,6 @@ class Processor:
         self.R.a &= 255
         self.R.f = 0 if self.R.a else 0x80
         self.R.m = 2
-
 
     def XORr_b(self):
         self.R.a ^= self.R.b
@@ -1504,7 +1496,6 @@ class Processor:
         self.R.f = 0 if self.R.a else 0x80
         self.R.m = 2
 
-
     def INCr_b(self):
         self.R.b += 1
         self.R.b &= 255
@@ -1553,7 +1544,6 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.f = 0 if i else 0x80
         self.R.m = 3
-
 
     def DECr_b(self):
         self.R.b -= 1
@@ -1604,7 +1594,6 @@ class Processor:
         self.R.f = 0 if i else 0x80
         self.R.m = 3
 
-
     def INCBC(self):
         self.R.c = (self.R.c + 1) & 255
         if not self.R.c:
@@ -1626,7 +1615,6 @@ class Processor:
     def INCSP(self):
         self.R.sp = (self.R.sp + 1) & 65535
         self.R.m = 1
-
 
     def DECBC(self):
         self.R.c = (self.R.c - 1) & 255
@@ -1650,9 +1638,7 @@ class Processor:
         self.R.sp = (self.R.sp - 1) & 65535
         self.R.m = 1
 
-
-        # --- Bit manipulation ---
-
+    # --- Bit manipulation ---
     def BIT0b(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
@@ -1698,9 +1684,10 @@ class Processor:
     def BIT0m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x01 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x01 \
+            else 0x80
         self.R.m = 3
-
 
     def RES0b(self):
         self.R.b &= 0xFE
@@ -1736,7 +1723,6 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
 
-
     def SET0b(self):
         self.R.b |= 0x01
         self.R.m = 2
@@ -1770,7 +1756,6 @@ class Processor:
         i |= 0x01
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
-
 
     def BIT1b(self):
         self.R.f &= 0x1F
@@ -1817,9 +1802,10 @@ class Processor:
     def BIT1m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x02 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x02 \
+            else 0x80
         self.R.m = 3
-
 
     def RES1b(self):
         self.R.b &= 0xFD
@@ -1855,7 +1841,6 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
 
-
     def SET1b(self):
         self.R.b |= 0x02
         self.R.m = 2
@@ -1889,7 +1874,6 @@ class Processor:
         i |= 0x02
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
-
 
     def BIT2b(self):
         self.R.f &= 0x1F
@@ -1936,9 +1920,10 @@ class Processor:
     def BIT2m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x04 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x04 \
+            else 0x80
         self.R.m = 3
-
 
     def RES2b(self):
         self.R.b &= 0xFB
@@ -1974,7 +1959,6 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
 
-
     def SET2b(self):
         self.R.b |= 0x04
         self.R.m = 2
@@ -2008,7 +1992,6 @@ class Processor:
         i |= 0x04
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
-
 
     def BIT3b(self):
         self.R.f &= 0x1F
@@ -2055,9 +2038,10 @@ class Processor:
     def BIT3m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x08 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x08 \
+            else 0x80
         self.R.m = 3
-
 
     def RES3b(self):
         self.R.b &= 0xF7
@@ -2092,7 +2076,6 @@ class Processor:
         i &= 0xF7
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.m = 4
-
 
     def SET3b(self):
         self.R.b |= 0x08
@@ -2174,7 +2157,9 @@ class Processor:
     def BIT4m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x10 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x10 \
+            else 0x80
         self.R.m = 3
 
     # ---
@@ -2293,7 +2278,9 @@ class Processor:
     def BIT5m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x20 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x20 \
+            else 0x80
         self.R.m = 3
 
     # ---
@@ -2412,7 +2399,9 @@ class Processor:
     def BIT6m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x40 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x40 \
+            else 0x80
         self.R.m = 3
 
     # ---
@@ -2531,7 +2520,9 @@ class Processor:
     def BIT7m(self):
         self.R.f &= 0x1F
         self.R.f |= 0x20
-        self.R.f = 0 if self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x80 else 0x80
+        self.R.f = 0 if \
+            self.mainboard.MMU.readByte((self.R.h << 8) + self.R.l) & 0x80 \
+            else 0x80
         self.R.m = 3
 
     # ---
@@ -2712,7 +2703,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 4
 
-
     def RLCr_b(self):
         ci = 1 if self.R.b & 0x80 else 0
         co = 0x10 if self.R.b & 0x80 else 0
@@ -2786,7 +2776,6 @@ class Processor:
         self.mainboard.MMU.writeByte((self.R.h << 8) + self.R.l, i)
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 4
-
 
     def RRr_b(self):
         ci = 0x80 if self.R.f & 0x10 else 0
@@ -2862,7 +2851,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 4
 
-
     def RRCr_b(self):
         ci = 0x80 if self.R.b & 1 else 0
         co = 0x10 if self.R.b & 1 else 0
@@ -2937,7 +2925,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 4
 
-
     def SLAr_b(self):
         co = 0x10 if self.R.b & 0x80 else 0
         self.R.b = (self.R.b << 1) & 255
@@ -2987,7 +2974,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 2
 
-
     def SLLr_b(self):
         co = 0x10 if self.R.b & 0x80 else 0
         self.R.b = (self.R.b << 1) & 255 + 1
@@ -3036,7 +3022,6 @@ class Processor:
         self.R.f = 0 if self.R.a else 0x80
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 2
-
 
     def SRAr_b(self):
         ci = self.R.b & 0x80
@@ -3094,7 +3079,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 2
 
-
     def SRLr_b(self):
         co = 0x10 if self.R.b & 1 else 0
         self.R.b = (self.R.b >> 1) & 255
@@ -3144,7 +3128,6 @@ class Processor:
         self.R.f = (self.R.f & 0xEF) + co
         self.R.m = 2
 
-
     def CPL(self):
         self.R.a ^= 255
         self.R.f = 0 if self.R.a else 0x80
@@ -3158,7 +3141,6 @@ class Processor:
             self.R.f |= 0x80
         self.R.m = 2
 
-
     def CCF(self):
         ci = 0 if self.R.f & 0x10 else 0x10
         self.R.f = (self.R.f & 0xEF) + ci
@@ -3168,9 +3150,7 @@ class Processor:
         self.R.f |= 0x10
         self.R.m = 1
 
-
         # --- Stack ---
-
     def PUSHBC(self):
         self.R.sp -= 1
         self.mainboard.MMU.writeByte(self.R.sp, self.R.b)
@@ -3198,7 +3178,6 @@ class Processor:
         self.R.sp -= 1
         self.mainboard.MMU.writeByte(self.R.sp, self.R.f)
         self.R.m = 3
-
 
     def POPBC(self):
         self.R.c = self.mainboard.MMU.readByte(self.R.sp)
@@ -3228,9 +3207,7 @@ class Processor:
         self.R.sp += 1
         self.R.m = 3
 
-
-        # --- Jump ---
-
+    # --- Jump ---
     def JPnn(self):
         self.R.pc = self.mainboard.MMU.readWord(self.R.pc)
         self.R.m = 3
@@ -3270,7 +3247,6 @@ class Processor:
             self.R.m += 1
         else:
             self.R.pc += 2
-
 
     def JRn(self):
         i = self.mainboard.MMU.readByte(self.R.pc)
@@ -3320,7 +3296,6 @@ class Processor:
         if (self.R.f & 0x10) == 0x10:
             self.R.pc += i
             self.R.m += 1
-
 
     def DJNZn(self):
         i = self.mainboard.MMU.readByte(self.R.pc)
@@ -3379,7 +3354,6 @@ class Processor:
         else:
             self.R.pc += 2
 
-
     def RET(self):
         self.R.pc = self.mainboard.MMU.readWord(self.R.sp)
         self.R.sp += 2
@@ -3419,7 +3393,6 @@ class Processor:
             self.R.pc = self.mainboard.MMU.readWord(self.R.sp)
             self.R.sp += 2
             self.R.m += 2
-
 
     def RST00(self):
         self.rsv()
@@ -3512,14 +3485,12 @@ class Processor:
         self.R.pc = 0x60
         self.R.m = 3
 
-
     def NOP(self):
         self.R.m = 1
 
     def HALT(self):
         self._HALT = 1
         self.R.m = 1
-
 
     def DI(self):
         self.R.ime = 0
@@ -3567,14 +3538,19 @@ class Processor:
         """
         opc = self.R.pc - 1
         self._STOP = 1
-        raise NotImplementedError('Unimplemented instruction at %i (0x%X)' % (opc, opc))
+        raise NotImplementedError(
+            'Undefined map entry at %i (0x%X)' % (opc, opc)
+        )
 
     def XXX(self, opcode):
         def a():
-            raise NotImplementedError('Unimplemented instruction at %i (0x%X)' % (opcode, opcode))
+            self.log.info('Unimplemented instruction at %i (0x%X)', opcode, opcode)
+            # raise NotImplementedError(
+            #     'Unimplemented instruction at %i (0x%X)' % (opcode, opcode)
+            # )
         return a
 
 if __name__ == '__main__':
-    a=Processor(None)
-    for i,c in enumerate(a._map):
-        print('%-4i%-5X%s' % (i, i, c.__name__))
+    a = Processor(None)
+    for i, c in a._map.items():
+        print('%-4i0x%04X  %s' % (i, i, c.__name__))

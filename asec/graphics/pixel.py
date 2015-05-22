@@ -35,7 +35,9 @@ class Pixel(object):
         elif len(value) == 8 and value[0:2].lower() == '0x':
             value = value[2:]
 
-        self.red, self.green, self.blue = (_HEXDEC[value[0:2]], _HEXDEC[value[2:4]], _HEXDEC[value[4:6]])
+        self.red, self.green, self.blue = (
+            _HEXDEC[value[0:2]], _HEXDEC[value[2:4]], _HEXDEC[value[4:6]]
+        )
 
     @property
     def red(self):

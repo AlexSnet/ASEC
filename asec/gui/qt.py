@@ -28,8 +28,12 @@ from asec.rom import Loader
 
 
 class Timer(threading.Thread):
-    def __init__(self, interval, function, args=[], kwargs={}):
+    def __init__(self, interval, function, args=None, kwargs={}):
+        if not args:
+            args = []
+
         super(Timer, self).__init__()
+
         self.interval = interval
         self.function = function
         self.args = args
@@ -66,8 +70,8 @@ class Screen(QWidget):
         self._fps = 0
         self._image = None
         self._last_redraw = time.time()
-        self._redraw_timer = Timer(.03, lambda: self.repaint())
-        self._redraw_timer.start()
+        # self._redraw_timer = Timer(.03, lambda: self.repaint())
+        # self._redraw_timer.start()
 
         self._repainting = False
 
@@ -83,12 +87,12 @@ class Screen(QWidget):
         self.resize(self.screenX, self.screenY)
 
     def redraw(self, screen):
-        current = time.time()
+        current = int(time.time() * 1000)
         self._fps = 1000/(current - self._last_redraw)
         self._image = ViewQImage(screen)
         self._last_redraw = current
         # self.update()
-        # self.repaint()
+        self.repaint()
 
     def repaint(self):
         if hasattr(self, '_repainting') and not self._repainting:
@@ -143,9 +147,9 @@ class Screen(QWidget):
         self.pause()
         # self.emulator._loop = False
         # self.emulator._stop()
-        self._redraw_timer.stop()
-        self._redraw_timer.join()
-        del self._redraw_timer
+        # self._redraw_timer.stop()
+        # self._redraw_timer.join()
+        # del self._redraw_timer
         del self.emulator
 
 
@@ -187,8 +191,6 @@ class ROMChooser(QWidget):
         painter.setPen(Qt.NoPen)
         painter.setBrush(drawColor)
         painter.drawPath(arrow)
-
-        super(ROMChooser, self).paintEvent(event)
 
     # Drag & drop events
     def dragEnterEvent(self, event):

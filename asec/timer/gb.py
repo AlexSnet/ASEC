@@ -1,7 +1,9 @@
 import logging
 
-class Clock:
+
+class Clock(object):
     def __init__(self):
+        self.log = logging.getLogger(self.__class__.__name__)
         self.main = 0
         self.sub = 0
         self.div = 0
@@ -10,9 +12,10 @@ class Clock:
         self.main = 0
         self.sub = 0
         self.div = 0
+        self.log.debug('reset')
 
 
-class Timer:
+class Timer(object):
     def __init__(self, mainboard):
         self.mainboard = mainboard
         self.log = logging.getLogger(self.__class__.__name__)
@@ -70,12 +73,16 @@ class Timer:
 
     def readByte(self, address):
         if address == 0xFF04:
+            self.log.debug('In section: div')
             return self.div
         elif address == 0xFF05:
+            self.log.debug('In section: tima')
             return self.tima
         elif address == 0xFF06:
+            self.log.debug('In section: tma')
             return self.tma
         elif address == 0xFF07:
+            self.log.debug('In section: tac')
             return self.tac
 
     def writeByte(self, address, value):

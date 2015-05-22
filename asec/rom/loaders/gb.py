@@ -36,33 +36,32 @@ class InfoLoader(DefaultLoader):
             s = self.ROM[i + 0x134]
             if s != 0:
                 title = "%s%s" % (title, chr(s))
-        if title:
-            self._name = title
-        print('Title:', title)
+        self._title = title
+        # print('Title:', title)
 
         # 0147 - Cartridge Type
         cartridge_type = self.ROM[0x147]
         self._cartridge_type = cartridge_type
-        print('Cartridge type:', CARTRIDGE_TYPES_REPR[cartridge_type])
+        # print('Cartridge type:', CARTRIDGE_TYPES_REPR[cartridge_type])
 
         # 0148 - ROM Size
         # Specifies the ROM Size of the cartridge.
         # Typically calculated as "32KB shl N".
         rom_size = self.ROM[0x148]
         self._rom_size = rom_size
-        print('ROM size:', rom_size)
+        # print('ROM size:', rom_size)
 
         # 0149 - RAM Size
         # Specifies the size of the external RAM in the cartridge (if any).
         ram_size = self.ROM[0x149]
-        print('RAM Size:', ram_size)
+        # print('RAM Size:', ram_size)
 
         # 014A - Destination Code
         # Specifies if this version of the game is supposed
         #  to be sold in japan, or anywhere else.
         # Only two values are defined.
         destination_code = self.ROM[0x14A]  # 0x00 - Japan, 0x01 - Non-Japan
-        print('Destination:', 'Japan' if destination_code == 0x00 else 'Non Japan')
+        # print('Destination:', 'Japan' if destination_code == 0x00 else 'Non Japan')
 
         # 014B - Old Licensee Code
         # Specifies the games company/publisher code in range 00-FFh.
@@ -70,26 +69,30 @@ class InfoLoader(DefaultLoader):
         #   header bytes 0144-0145 is used instead.
         # (Super GameBoy functions won't work if <> $33.)
         old_licensee_code = self.ROM[0x14B]
-        print('License code:', old_licensee_code)
+        # print('License code:', old_licensee_code)
 
         # 014C - Mask ROM Version number
         # Specifies the version number of the game. That is usually 00h.
         mask_rom_version = self.ROM[0x14C]
-        print('Mask ROM Version:', mask_rom_version)
+        # print('Mask ROM Version:', mask_rom_version)
 
         # 014D - Header Checksum
         # Contains an 8 bit checksum across the
         #  cartridge header bytes 0134-014C.
         # The checksum is calculated as follows:
         header_checksum = self.ROM[0x14D]
-        print('Header checksum:', header_checksum)
+        # print('Header checksum:', header_checksum)
 
         # 014E-014F - Global Checksum
         # Contains a 16 bit checksum (upper byte first) across the whole cartridge ROM.
         # Produced by adding all bytes of the cartridge (except for the two checksum bytes).
         # The Gameboy doesn't verify this checksum.
         global_checksum = ((self.ROM[0x14E] << 8) & self.ROM[0x14D])
-        print('Global checksum:', global_checksum)
+        # print('Global checksum:', global_checksum)
+
+    @property
+    def name(self):
+        return self._title
 
     @property
     def type(self):

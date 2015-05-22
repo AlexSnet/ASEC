@@ -1,15 +1,18 @@
-class Keyboard:
+import logging
+
+
+class Keyboard(object):
 
     KEYMAP = {
-        'UP' : 38,
+        'UP': 38,
         'DOWN': 40,
         'LEFT': 37,
         'RIGHT': 39,
 
-        'A' : 65,
-        'B' : 83,
+        'A': 65,
+        'B': 83,
 
-        'START' : 13,
+        'START': 13,
         'SELECT': 32
     }
 
@@ -20,7 +23,7 @@ class Keyboard:
         self.reset()
 
     def reset(self):
-        self.keys = {0:0x0F, 1:0x0F}
+        self.keys = {0: 0x0F, 1: 0x0F}
         self.colidX = 0
 
     def writeByte(self, value):
